@@ -1,2 +1,1 @@
-# sample-ui
-Sample UI
+# Sample UI
