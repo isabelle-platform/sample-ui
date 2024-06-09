@@ -341,8 +341,7 @@ impl ConfigListPage {
 
     fn add_config(&self) -> Callback<MouseEvent> {
         Callback::from(|_| {
-            let new_url = "/config/
-            ";
+            let new_url = "/config/edit";
             web_sys::window()
                 .unwrap()
                 .location()

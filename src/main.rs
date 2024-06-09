@@ -16,7 +16,7 @@ use isabelle_dm::transfer_model::detailed_login_user::DetailedLoginUser;
 
 use pages::{
     config_edit_page::ConfigEditPage, config_list_page::ConfigListPage,
-    device_edit_page::DeviceEditPage, device_list_page::DeviceListPage,
+    device_edit_page::DeviceEditPage, device_manage_page::DeviceManagePage, device_list_page::DeviceListPage,
     device_group_edit_page::DeviceGroupEditPage, device_group_list_page::DeviceGroupListPage,
     home::Home,
     itm_edit_page::ItmEditPage, login::LoginPage, logout::LogoutPage, page_not_found::PageNotFound,
@@ -45,6 +45,10 @@ pub enum Route {
     DeviceEdit,
     #[at("/device/edit?id={id}")]
     DeviceEditId { id: String },
+    #[at("/device/manage")]
+    DeviceManage,
+    #[at("/device/manage?id={id}")]
+    DeviceManageId { id: String },
 
     #[at("/device_group")]
     DeviceGroups,
@@ -343,6 +347,12 @@ fn switch(route: &Route) -> Html {
         }
         Route::DeviceEditId { id: _ } => {
             html! { <DeviceEditPage /> }
+        }
+        Route::DeviceManage => {
+            html! { <DeviceManagePage /> }
+        }
+        Route::DeviceManageId { id: _ } => {
+            html! { <DeviceManagePage /> }
         }
         Route::DeviceGroups => {
             html! { <DeviceGroupListPage /> }

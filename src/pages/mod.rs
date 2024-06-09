@@ -1,6 +1,7 @@
 pub mod config_edit_page;
 pub mod config_list_page;
 pub mod device_edit_page;
+pub mod device_manage_page;
 pub mod device_list_page;
 pub mod device_group_edit_page;
 pub mod device_group_list_page;

@@ -25,7 +25,7 @@ impl Component for DeviceView {
                 </div>
 
                 <div class="list-item-content">
-                    <div class="list-item-title pr-5"><a href={ "/device/edit?id=".to_owned() + &ctx.props().id.to_string() }>{ ctx.props().safe_str("name", "").clone()}</a>
+                    <div class="list-item-title pr-5"><a href={ "/device/manage?id=".to_owned() + &ctx.props().id.to_string() }>{ ctx.props().safe_str("name", "").clone()}</a>
                         <span class="pl-5">
                             <span class={"tag is-danger ".to_string() + if ctx.props().safe_bool("role_is_active", true) { "is-hidden" } else { "" }}>{ "Inactive" }</span>
                         </span>
@@ -35,6 +35,11 @@ impl Component for DeviceView {
 
                 <div class="list-item-controls">
                   <div class="buttons is-right">
+                    <a href={ "/device/manage?id=".to_owned() + &ctx.props().id.to_string() }>
+                        <button class="button is-link is-outlined">
+                          <span>{"Manage"}</span>
+                        </button>
+                    </a>
                     <a href={ "/device/edit?id=".to_owned() + &ctx.props().id.to_string() }>
                         <button class="button is-link is-outlined">
                           <span>{"Edit"}</span>

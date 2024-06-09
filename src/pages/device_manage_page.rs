@@ -16,27 +16,37 @@ use crate::util::input::*;
 
 pub enum Msg {
     UpdateItemList(FetchState<HashMap<u64, Item>>),
-    UpdateConfigs(FetchState<HashMap<u64, Item>>),
+    UpdateGroups(FetchState<HashMap<u64, Item>>),
     UpdateStr(String, String),
     UpdateBool(String, bool),
     UpdateU64(String, u64),
     UpdateId(String, u64),
+    Connect,
+    ConnectSucceeded,
+    ConnectFailed,
+    Fetch,
+    FetchSucceeded,
+    FetchFailed,
     SaveData,
     SaveDataSucceeded,
     SaveDataFailed,
 }
 
-pub struct DeviceGroupEditPage {
+pub struct DeviceManagePage {
     queried_id: u64,
     item: Item,
     orig_item: Item,
     items: FetchState<HashMap<u64, Item>>,
-    configs: FetchState<HashMap<u64, Item>>,
+    groups: FetchState<HashMap<u64, Item>>,
     in_progress: bool,
     failed: bool,
+    connected: bool,
+    connect_in_progress: bool,
+    fetch_in_progress: bool,
+    fetched_data: String,
 }
 
-impl Component for DeviceGroupEditPage {
+impl Component for DeviceManagePage {
     type Message = Msg;
     type Properties = ();
 
@@ -53,12 +63,16 @@ impl Component for DeviceGroupEditPage {
 
         Self {
             items: FetchState::Fetching,
-            configs: FetchState::Fetching,
+            groups: FetchState::Fetching,
             queried_id: q.id,
             item: Item::new(),
             orig_item: Item::new(),
             in_progress: false,
             failed: false,
+            connected: false,
+            connect_in_progress: false,
+            fetch_in_progress: false,
+            fetched_data: "".to_string(),
         }
     }
 
@@ -76,19 +90,8 @@ impl Component for DeviceGroupEditPage {
                     _ => {}
                 }
             }
-            Msg::UpdateConfigs(fetch_state) => {
-                self.configs = fetch_state;
-            }
-            Msg::SaveData => {
-                let queried_id = self.queried_id;
-                let itm = self.item.clone();
-                self.in_progress = true;
-                ctx.link().send_future(async move {
-                    match post_itm_edit("device_group", queried_id, true, itm).await {
-                        Ok(_res) => Msg::SaveDataSucceeded,
-                        Err(_err) => Msg::SaveDataFailed,
-                    }
-                });
+            Msg::UpdateGroups(fetch_state) => {
+                self.groups = fetch_state;
             }
             Msg::UpdateStr(name, val) => {
                 self.item.set_str(&name, &val);
@@ -102,10 +105,21 @@ impl Component for DeviceGroupEditPage {
             Msg::UpdateId(name, val) => {
                 self.item.set_id(&name, val);
             }
+            Msg::SaveData => {
+                let queried_id = self.queried_id;
+                let itm = self.item.clone();
+                self.in_progress = true;
+                ctx.link().send_future(async move {
+                    match post_itm_edit("device", queried_id, true, itm).await {
+                        Ok(_res) => Msg::SaveDataSucceeded,
+                        Err(_err) => Msg::SaveDataFailed,
+                    }
+                });
+            }
             Msg::SaveDataSucceeded => {
                 self.in_progress = false;
                 self.failed = false;
-                let new_url = "/device_group";
+                let new_url = "/device";
                 web_sys::window()
                     .unwrap()
                     .location()
@@ -116,17 +130,47 @@ impl Component for DeviceGroupEditPage {
                 self.in_progress = false;
                 self.failed = true;
             }
+            Msg::Connect => {
+                self.connected = false;
+                self.connect_in_progress = true;
+                ctx.link().send_future(async move {
+                    Msg::ConnectSucceeded
+                });
+            }
+            Msg::ConnectSucceeded => {
+                self.connected = true;
+                self.connect_in_progress = false;
+            }
+            Msg::ConnectFailed => {
+                self.connected = false;
+                self.connect_in_progress = false;
+            }
+            Msg::Fetch => {
+                self.fetch_in_progress = true;
+                self.fetched_data = "".to_string();
+                ctx.link().send_future(async move {
+                    Msg::FetchSucceeded
+                });
+            }
+            Msg::FetchSucceeded => {
+                self.fetch_in_progress = false;
+                self.fetched_data = "Fetched data".to_string();
+            }
+            Msg::FetchFailed => {
+                self.fetch_in_progress = false;
+                self.fetched_data = "Failed to get data".to_string();
+            }
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let configs;
-        match &self.configs {
+        let groups;
+        match &self.groups {
             FetchState::Fetching => {
                 ctx.link().send_future(async move {
                     match fetch_itm_list(
-                        "config",
+                        "device_group",
                         "list",
                         u64::MAX,
                         u64::MAX,
@@ -139,18 +183,18 @@ impl Component for DeviceGroupEditPage {
                     )
                     .await
                     {
-                        Ok(md) => Msg::UpdateConfigs(FetchState::Success(md)),
-                        Err(err) => Msg::UpdateConfigs(FetchState::Failed(err)),
+                        Ok(md) => Msg::UpdateGroups(FetchState::Success(md)),
+                        Err(err) => Msg::UpdateGroups(FetchState::Failed(err)),
                     }
                 });
                 return html! {
                     <>
-                        <BaloonView message={ "Loading configs..." } style="info"/>
+                        <BaloonView message={ "Loading groups..." } style="info"/>
                     </>
                 };
             }
             FetchState::Success(_items) => {
-                configs = _items;
+                groups = _items;
             }
             FetchState::Failed(err) => {
                 return html! {
@@ -165,7 +209,7 @@ impl Component for DeviceGroupEditPage {
                 let queried_id = self.queried_id;
                 ctx.link().send_future(async move {
                     match fetch_itm_list(
-                        "device_group",
+                        "device",
                         "full",
                         queried_id,
                         u64::MAX,
@@ -192,8 +236,8 @@ impl Component for DeviceGroupEditPage {
                 return html! {
                     <>
                     <div class="section container">
-                        <h1 class="title">{ "Edit device group" }</h1>
-                        { self.add_form(ctx, configs) }
+                        <h1 class="title">{ "Manage device" }</h1>
+                        { self.add_form(ctx, groups.clone()) }
                     </div>
                     </>
                 };
@@ -209,12 +253,12 @@ impl Component for DeviceGroupEditPage {
     }
 }
 
-impl DeviceGroupEditPage {
-    fn add_form(&self, ctx: &Context<Self>, configs: &HashMap<u64, Item>) -> Html {
-        let err_htm = if self.failed {
+impl DeviceManagePage {
+    fn add_form(&self, ctx: &Context<Self>, groups: HashMap<u64, Item>) -> Html {
+        let conn_htm = if self.connected {
             html! {
                 <>
-                    <BaloonView message={ "Failed to save device_groupuration" } style="error"/>
+                    <BaloonView message={ "Connected" } style="info"/>
                 </>
             }
         } else {
@@ -223,15 +267,55 @@ impl DeviceGroupEditPage {
                 </>
             }
         };
-
-        let configs_list = configs.into_iter().map(|el| {
+        let fetching_htm = if self.fetch_in_progress {
             html! {
-                <option selected={ self.item.safe_id("config", u64::MAX) == *el.0 } value={ el.1.id.to_string() }>{ el.1.safe_str("name", "") }</option>
+                <>
+                    <BaloonView message={ "Fetching..." } style="info"/>
+                </>
+            }
+        } else {
+            html! {
+                <>
+                </>
+            }
+        };
+        let err_htm = if self.failed {
+            html! {
+                <>
+                    <BaloonView message={ "Failed to save device" } style="error"/>
+                </>
+            }
+        } else {
+            html! {
+                <>
+                </>
+            }
+        };
+        let fetched_data_htm =
+            html! {
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">{ "Fetched data" }</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control">
+                                <input class="input is-static" type="text" name="fetched_data" readonly=true value={ self.fetched_data.clone() }/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            };
+        let groups_list = groups.into_iter().map(|el| {
+            html! {
+                <option selected={ self.item.safe_id("group", u64::MAX) == el.0 } value={ el.1.id.to_string() }>{ el.1.safe_str("name", "") }</option>
             }
         });
 
         html! {
             <>
+                { conn_htm }
+                { fetching_htm }
                 { err_htm }
 
                 <div class="field is-horizontal is-hidden">
@@ -254,26 +338,7 @@ impl DeviceGroupEditPage {
                     <div class="field-body">
                         <div class="field">
                             <div class="control has-icons-left">
-                                <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("name".to_string(), get_input(event)))} type="text" value={ self.item.safe_str("name", "").clone() }/>
-                                <span class="icon is-small is-left">
-                                    <i class="fas fa-umbrella"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class={"field is-horizontal"}>
-                    <div class="field-label is-normal">
-                        <label class="label">{ "Configuration" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control has-icons-left">
-                                <select oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateId("config".to_string(), get_select_input_id(event)))} class="input" value={ self.item.safe_id("config", 0).to_string() }>
-                                    <option value="0" selected={ self.item.safe_id("config", 0) == 0 }>{"Unset"}</option>
-                                    { for configs_list }
-                                </select>
+                                <input disabled=true class="input" type="text" value={ self.item.safe_str("name", "").clone() }/>
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-umbrella"></i>
                                 </span>
@@ -284,16 +349,47 @@ impl DeviceGroupEditPage {
 
                 <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                        <label class="label">{ "Notes" }</label>
+                        <label class="label">{ "IP/FQDN" }</label>
                     </div>
                     <div class="field-body">
                         <div class="field">
-                            <div class="control">
-                                <textarea class="textarea" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("notes".to_string(), get_text_content(event)))} name="strs[notes]" rows="10" value={ self.item.safe_str("notes", "").clone() }/>
+                            <div class="control has-icons-left">
+                                <input disabled=true class="input" type="text" value={ self.item.safe_str("ip_fqdn", "").clone() }/>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-umbrella"></i>
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="field is-horizontal">
+                    <div class="field-label">
+                        <label class="label">{ "" }</label>
+                    </div>
+                    <div class="field-body">
+                        <button onclick={ctx.link().callback(|_| Msg::Connect)} type="submit" class={"button is-info ".to_owned() + if self.connect_in_progress { "is-loading"} else { "" }}>
+                            <span>
+                                { "Connect" }
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="field is-horizontal">
+                    <div class="field-label">
+                        <label class="label">{ "" }</label>
+                    </div>
+                    <div class="field-body">
+                        <button onclick={ctx.link().callback(|_| Msg::Fetch)} type="submit" class={"button is-success ".to_owned() + if self.fetch_in_progress { "is-loading"} else { "" }}>
+                            <span>
+                                { "Fetch data" }
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                { fetched_data_htm }
 
                 <hr/>
 
