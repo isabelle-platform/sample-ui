@@ -19,7 +19,10 @@ use pages::{
     device_edit_page::DeviceEditPage, device_manage_page::DeviceManagePage, device_list_page::DeviceListPage,
     device_group_edit_page::DeviceGroupEditPage, device_group_list_page::DeviceGroupListPage,
     home::Home,
-    itm_edit_page::ItmEditPage, login::LoginPage, logout::LogoutPage, page_not_found::PageNotFound,
+    itm_edit_page::ItmEditPage, login::LoginPage, logout::LogoutPage,
+    module_edit_page::ModuleEditPage,
+    module_list_page::ModuleListPage,
+    page_not_found::PageNotFound,
     privacy_policy::PrivacyPolicyPage,
     setting_edit_page::SettingEditPage,
     user_edit_page::UserEditPage, user_list_page::UserListPage, user_pwd_page::UserPwdPage,
@@ -56,6 +59,13 @@ pub enum Route {
     DeviceGroupEdit,
     #[at("/device_group/edit?id={id}")]
     DeviceGroupEditId { id: String },
+
+    #[at("/module")]
+    Modules,
+    #[at("/module/edit")]
+    ModuleEdit,
+    #[at("/module/edit?id={id}")]
+    ModuleEditId { id: String },
 
     #[at("/user")]
     Users,
@@ -274,9 +284,10 @@ impl Model {
                 <div class={classes!("navbar-menu", active_class)}>
                     <div class="navbar-end">
                         <Link<Route> to={Route::Configs} classes={ "navbar-item" }>{ "Configurations" }</Link<Route>>
-                        <Link<Route> to={Route::Users} classes={ "navbar-item" }>{ "People" }</Link<Route>>
                         <Link<Route> to={Route::Devices} classes={ "navbar-item" }>{ "Devices" }</Link<Route>>
                         <Link<Route> to={Route::DeviceGroups} classes={ "navbar-item" }>{ "Device groups" }</Link<Route>>
+                        <Link<Route> to={Route::Modules} classes={ "navbar-item" }>{ "Modules" }</Link<Route>>
+                        <Link<Route> to={Route::Users} classes={ "navbar-item" }>{ "User" }</Link<Route>>
 
                         <div class="navbar-item has-dropdown is-hoverable">
                             <a class="navbar-link">
@@ -362,6 +373,15 @@ fn switch(route: &Route) -> Html {
         }
         Route::DeviceGroupEditId { id: _ } => {
             html! { <DeviceGroupEditPage /> }
+        }
+        Route::Modules => {
+            html! { <ModuleListPage /> }
+        }
+        Route::ModuleEdit => {
+            html! { <ModuleEditPage /> }
+        }
+        Route::ModuleEditId { id: _ } => {
+            html! { <ModuleEditPage /> }
         }
         Route::SettingEdit => {
             html! { <SettingEditPage /> }
