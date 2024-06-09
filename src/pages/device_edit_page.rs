@@ -16,9 +16,11 @@ use crate::util::input::*;
 
 pub enum Msg {
     UpdateItemList(FetchState<HashMap<u64, Item>>),
+    UpdateGroups(FetchState<HashMap<u64, Item>>),
     UpdateStr(String, String),
     UpdateBool(String, bool),
     UpdateU64(String, u64),
+    UpdateId(String, u64),
     SaveData,
     SaveDataSucceeded,
     SaveDataFailed,
@@ -29,6 +31,7 @@ pub struct DeviceEditPage {
     item: Item,
     orig_item: Item,
     items: FetchState<HashMap<u64, Item>>,
+    groups: FetchState<HashMap<u64, Item>>,
     in_progress: bool,
     failed: bool,
 }
@@ -50,6 +53,7 @@ impl Component for DeviceEditPage {
 
         Self {
             items: FetchState::Fetching,
+            groups: FetchState::Fetching,
             queried_id: q.id,
             item: Item::new(),
             orig_item: Item::new(),
@@ -72,6 +76,9 @@ impl Component for DeviceEditPage {
                     _ => {}
                 }
             }
+            Msg::UpdateGroups(fetch_state) => {
+                self.groups = fetch_state;
+            }
             Msg::SaveData => {
                 let queried_id = self.queried_id;
                 let itm = self.item.clone();
@@ -92,6 +99,9 @@ impl Component for DeviceEditPage {
             Msg::UpdateU64(name, val) => {
                 self.item.set_u64(&name, val);
             }
+            Msg::UpdateId(name, val) => {
+                self.item.set_id(&name, val);
+            }
             Msg::SaveDataSucceeded => {
                 self.in_progress = false;
                 self.failed = false;
@@ -111,6 +121,45 @@ impl Component for DeviceEditPage {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let groups;
+        match &self.groups {
+            FetchState::Fetching => {
+                ctx.link().send_future(async move {
+                    match fetch_itm_list(
+                        "device_group",
+                        "list",
+                        u64::MAX,
+                        u64::MAX,
+                        u64::MAX,
+                        "name",
+                        "",
+                        u64::MAX,
+                        u64::MAX,
+                        Vec::new(),
+                    )
+                    .await
+                    {
+                        Ok(md) => Msg::UpdateGroups(FetchState::Success(md)),
+                        Err(err) => Msg::UpdateGroups(FetchState::Failed(err)),
+                    }
+                });
+                return html! {
+                    <>
+                        <BaloonView message={ "Loading groups..." } style="info"/>
+                    </>
+                };
+            }
+            FetchState::Success(_items) => {
+                groups = _items;
+            }
+            FetchState::Failed(err) => {
+                return html! {
+                    <>
+                        <BaloonView message={ err.to_string() } style="error"/>
+                    </>
+                }
+            }
+        };
         match &self.items {
             FetchState::Fetching => {
                 let queried_id = self.queried_id;
@@ -144,7 +193,7 @@ impl Component for DeviceEditPage {
                     <>
                     <div class="section container">
                         <h1 class="title">{ "Edit device" }</h1>
-                        { self.add_form(ctx) }
+                        { self.add_form(ctx, groups.clone()) }
                     </div>
                     </>
                 };
@@ -161,11 +210,11 @@ impl Component for DeviceEditPage {
 }
 
 impl DeviceEditPage {
-    fn add_form(&self, ctx: &Context<Self>) -> Html {
+    fn add_form(&self, ctx: &Context<Self>, groups: HashMap<u64, Item>) -> Html {
         let err_htm = if self.failed {
             html! {
                 <>
-                    <BaloonView message={ "Failed to save deviceuration" } style="error"/>
+                    <BaloonView message={ "Failed to save device" } style="error"/>
                 </>
             }
         } else {
@@ -174,6 +223,12 @@ impl DeviceEditPage {
                 </>
             }
         };
+        let groups_list = groups.into_iter().map(|el| {
+            html! {
+                <option selected={ self.item.safe_id("group", u64::MAX) == el.0 } value={ el.1.id.to_string() }>{ el.1.safe_str("name", "") }</option>
+            }
+        });
+
         html! {
             <>
                 { err_htm }
@@ -215,6 +270,25 @@ impl DeviceEditPage {
                         <div class="field">
                             <div class="control has-icons-left">
                                 <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("ip_fqdn".to_string(), get_input(event)))} type="text" value={ self.item.safe_str("ip_fqdn", "").clone() }/>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-umbrella"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class={"field is-horizontal"}>
+                    <div class="field-label is-normal">
+                        <label class="label">{ "Group" }</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control has-icons-left">
+                                <select oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateId("group".to_string(), get_select_input_id(event)))} class="input" value={ self.item.safe_id("group", 0).to_string() }>
+                                    <option value="0" selected={ self.item.safe_id("group", 0) == 0 }>{"Unset"}</option>
+                                    { for groups_list }
+                                </select>
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-umbrella"></i>
                                 </span>
