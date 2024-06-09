@@ -30,8 +30,14 @@ impl Component for ConfigView {
                             <span class={"tag is-danger ".to_string() + if ctx.props().safe_bool("role_is_active", true) { "is-hidden" } else { "" }}>{ "Inactive" }</span>
                         </span>
                     </div>
-                    <div class="list-item-description">{ &ctx.props().safe_str("phone", "") }</div>
-                    <div class="list-item-description">{ &ctx.props().safe_str("email", "") }</div>
+                    <div>
+                        <i>
+                            { "Modules:" }
+                        </i>
+                    </div>
+                    <a class="list-item-description" href={ "/config/dhcp/edit?id=".to_owned() + &ctx.props().id.to_string() }>
+                        {"· DHCP"}
+                    </a>
                 </div>
 
                 <div class="list-item-controls">

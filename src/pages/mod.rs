@@ -1,3 +1,4 @@
+pub mod config_edit_dhcp_page;
 pub mod config_edit_page;
 pub mod config_list_page;
 pub mod device_edit_page;

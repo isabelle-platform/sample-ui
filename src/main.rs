@@ -15,7 +15,9 @@ use crate::components::baloon::BaloonView;
 use isabelle_dm::transfer_model::detailed_login_user::DetailedLoginUser;
 
 use pages::{
-    config_edit_page::ConfigEditPage, config_list_page::ConfigListPage,
+    config_edit_page::ConfigEditPage,
+    config_edit_dhcp_page::ConfigEditDhcpPage,
+    config_list_page::ConfigListPage,
     device_edit_page::DeviceEditPage, device_manage_page::DeviceManagePage, device_list_page::DeviceListPage,
     device_group_edit_page::DeviceGroupEditPage, device_group_list_page::DeviceGroupListPage,
     home::Home,
@@ -41,6 +43,10 @@ pub enum Route {
     ConfigEdit,
     #[at("/config/edit?id={id}")]
     ConfigEditId { id: String },
+    #[at("/config/dhcp/edit")]
+    ConfigDhcpEdit,
+    #[at("/config/dhcp/edit?id={id}")]
+    ConfigDhcpEditId { id: String },
 
     #[at("/device")]
     Devices,
@@ -334,6 +340,12 @@ fn switch(route: &Route) -> Html {
         }
         Route::ConfigEditId { id: _ } => {
             html! { <ConfigEditPage /> }
+        }
+        Route::ConfigDhcpEdit => {
+            html! { <ConfigEditDhcpPage /> }
+        }
+        Route::ConfigDhcpEditId { id: _ } => {
+            html! { <ConfigEditDhcpPage /> }
         }
         Route::ItmEdit => {
             html! { <ItmEditPage /> }

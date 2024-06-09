@@ -24,16 +24,42 @@ pub enum Msg {
     SaveDataFailed,
 }
 
-pub struct ConfigEditPage {
+pub struct ConfigEditDhcpPage {
     queried_id: u64,
     item: Item,
     orig_item: Item,
     items: FetchState<HashMap<u64, Item>>,
     in_progress: bool,
     failed: bool,
+    lan_pools: Vec<LanPool>,
 }
 
-impl Component for ConfigEditPage {
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+pub struct LanPoolRegisteredMac {
+    mac: String,
+    ipv4: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+pub struct LanPool {
+    enable: bool,
+    ipv4_start: String,
+    ipv4_end: String,
+    interface: String,
+    routers: Vec<String>,
+    client_subnet_mask: String,
+    lease_time: u64,
+
+    registered: Vec<LanPoolRegisteredMac>,
+
+    domain: String,
+
+    dns: Vec<String>,
+
+    broadcast: String,
+}
+
+impl Component for ConfigEditDhcpPage {
     type Message = Msg;
     type Properties = ();
 
@@ -55,6 +81,7 @@ impl Component for ConfigEditPage {
             orig_item: Item::new(),
             in_progress: false,
             failed: false,
+            lan_pools: Vec::new(),
         }
     }
 
@@ -67,6 +94,17 @@ impl Component for ConfigEditPage {
                         if new_items.contains_key(&self.queried_id) {
                             self.item = new_items[&self.queried_id].clone();
                             self.orig_item = new_items[&self.queried_id].clone();
+
+                            let pool_str = self.item.safe_str("lan_pool", "");
+
+                            match serde_json::from_str::<Vec<LanPool>>(&pool_str) {
+                                Ok(obj) => {
+                                    self.lan_pools = obj.clone();
+                                }
+                                Err(_e) => {
+                                    self.lan_pools = Vec::new();
+                                }
+                            }
                         }
                     }
                     _ => {}
@@ -143,7 +181,7 @@ impl Component for ConfigEditPage {
                 return html! {
                     <>
                     <div class="section container">
-                        <h1 class="title">{ "Edit configuration" }</h1>
+                        <h1 class="title">{ "Edit DHCP module for " }{ self.item.safe_str("name", "") }</h1>
                         { self.add_form(ctx) }
                     </div>
                     </>
@@ -160,7 +198,7 @@ impl Component for ConfigEditPage {
     }
 }
 
-impl ConfigEditPage {
+impl ConfigEditDhcpPage {
     fn add_form(&self, ctx: &Context<Self>) -> Html {
         let err_htm = if self.failed {
             html! {
@@ -178,39 +216,6 @@ impl ConfigEditPage {
             <>
                 { err_htm }
 
-                <div class="field is-horizontal is-hidden">
-                    <div class="field-label is-normal">
-                        <label class="label">{ "ID" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input class="input is-static" type="text" name="id" readonly=true value={ self.queried_id.to_string() }/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label">{ "Name" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control has-icons-left">
-                                <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("name".to_string(), get_input(event)))} type="text" value={ self.item.safe_str("name", "").clone() }/>
-                                <span class="icon is-small is-left">
-                                    <i class="fas fa-umbrella"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <hr/>
-
-                <h2>{ "Modules" }</h2>
-
                 <div class="field is-horizontal">
                     <div class="field-label">
                         <label class="label">{ "" }</label>
@@ -220,23 +225,7 @@ impl ConfigEditPage {
                             <div class="control">
                                 <label class="checkbox">
                                   <input type="checkbox" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateBool("mod_dhcp".to_string(), get_checked(event)))} value="true" checked={ self.item.safe_bool("mod_dhcp", false) }/>
-                                  { " dhcp" }
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="field is-horizontal">
-                    <div class="field-label">
-                        <label class="label">{ "" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <label class="checkbox">
-                                  <input type="checkbox" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateBool("mod_interfaces".to_string(), get_checked(event)))} value="true" checked={ self.item.safe_bool("mod_interfaces", false) }/>
-                                  { " interfaces" }
+                                  { " Enable" }
                                 </label>
                             </div>
                         </div>
