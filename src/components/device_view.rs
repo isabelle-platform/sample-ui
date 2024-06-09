@@ -30,8 +30,7 @@ impl Component for DeviceView {
                             <span class={"tag is-danger ".to_string() + if ctx.props().safe_bool("role_is_active", true) { "is-hidden" } else { "" }}>{ "Inactive" }</span>
                         </span>
                     </div>
-                    <div class="list-item-description">{ &ctx.props().safe_str("phone", "") }</div>
-                    <div class="list-item-description">{ &ctx.props().safe_str("email", "") }</div>
+                    <div class="list-item-description">{ &ctx.props().safe_str("ip_fqdn", "") }</div>
                 </div>
 
                 <div class="list-item-controls">

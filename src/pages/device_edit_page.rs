@@ -209,30 +209,14 @@ impl DeviceEditPage {
 
                 <div class="field is-horizontal">
                     <div class="field-label is-normal">
-                        <label class="label">{ "Phone" }</label>
+                        <label class="label">{ "IP/FQDN" }</label>
                     </div>
                     <div class="field-body">
                         <div class="field">
                             <div class="control has-icons-left">
-                                <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("phone".to_string(), get_input(event)))} type="tel" value={ self.item.safe_str("phone", "").clone() }/>
+                                <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("ip_fqdn".to_string(), get_input(event)))} type="text" value={ self.item.safe_str("ip_fqdn", "").clone() }/>
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-umbrella"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label">{ "E-Mail" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control has-icons-left">
-                                <input class="input" oninput={ctx.link().callback(|event: InputEvent| Msg::UpdateStr("email".to_string(), get_input(event)))} type="email" value={ self.item.safe_str("email", "").clone() }/>
-                                <span class="icon is-small is-left">
-                                    <i class="fas fa-envelope"></i>
                                 </span>
                             </div>
                         </div>
