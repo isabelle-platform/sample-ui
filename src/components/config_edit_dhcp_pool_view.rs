@@ -1,11 +1,10 @@
-use yew::html::Scope;
-use crate::util::input::get_input;
 use crate::data::lan::LanPool;
+use crate::util::input::get_input;
+use yew::html::Scope;
 
 use yew::prelude::*;
 
-pub struct ConfigEditDhcpPoolView
-{
+pub struct ConfigEditDhcpPoolView {
     scope: Scope<Self>,
     props: Props,
     pool: LanPool,
@@ -36,13 +35,11 @@ impl Component for ConfigEditDhcpPoolView {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::UpdateLanPoolStr(name, value) => {
-                match name.as_str()
-                {
+                match name.as_str() {
                     "ipv4_start" => {
                         self.pool.ipv4_start = value.clone();
                     }
-                    _ => {
-                    }
+                    _ => {}
                 }
                 self.props.on_change.emit(self.pool.clone());
             }

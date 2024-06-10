@@ -12,8 +12,6 @@ use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-
-
 pub enum Msg {
     UpdateItemList(FetchState<HashMap<u64, Item>>),
     UpdateGroups(FetchState<HashMap<u64, Item>>),
@@ -133,9 +131,7 @@ impl Component for DeviceManagePage {
             Msg::Connect => {
                 self.connected = false;
                 self.connect_in_progress = true;
-                ctx.link().send_future(async move {
-                    Msg::ConnectSucceeded
-                });
+                ctx.link().send_future(async move { Msg::ConnectSucceeded });
             }
             Msg::ConnectSucceeded => {
                 self.connected = true;
@@ -148,9 +144,7 @@ impl Component for DeviceManagePage {
             Msg::Fetch => {
                 self.fetch_in_progress = true;
                 self.fetched_data = "".to_string();
-                ctx.link().send_future(async move {
-                    Msg::FetchSucceeded
-                });
+                ctx.link().send_future(async move { Msg::FetchSucceeded });
             }
             Msg::FetchSucceeded => {
                 self.fetch_in_progress = false;
@@ -291,21 +285,20 @@ impl DeviceManagePage {
                 </>
             }
         };
-        let fetched_data_htm =
-            html! {
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label">{ "Fetched data" }</label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <div class="control">
-                                <input class="input is-static" type="text" name="fetched_data" readonly=true value={ self.fetched_data.clone() }/>
-                            </div>
+        let fetched_data_htm = html! {
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">{ "Fetched data" }</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-static" type="text" name="fetched_data" readonly=true value={ self.fetched_data.clone() }/>
                         </div>
                     </div>
                 </div>
-            };
+            </div>
+        };
         let _groups_list = groups.into_iter().map(|el| {
             html! {
                 <option selected={ self.item.safe_id("group", u64::MAX) == el.0 } value={ el.1.id.to_string() }>{ el.1.safe_str("name", "") }</option>

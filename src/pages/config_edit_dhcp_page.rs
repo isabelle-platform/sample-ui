@@ -1,14 +1,14 @@
-use serde::Deserialize;
 use crate::common::*;
-use isabelle_dm::data_model::item::Item;
 use crate::components::baloon::BaloonView;
 use crate::components::config_edit_dhcp_pool_view::ConfigEditDhcpPoolView;
+use crate::data::lan::*;
 use crate::util::accessor::*;
+use crate::util::input::*;
+use isabelle_dm::data_model::item::Item;
+use serde::Deserialize;
 use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
-use crate::util::input::*;
-use crate::data::lan::*;
 
 pub struct ConfigEditDhcpPage {
     queried_id: u64,
@@ -118,16 +118,14 @@ impl Component for ConfigEditDhcpPage {
                 self.failed = true;
             }
             Msg::UpdateLanPool(pool) => {
-                match self.lan_pools
-                          .iter()
-                          .position(|x| x.id == pool.id) {
+                match self.lan_pools.iter().position(|x| x.id == pool.id) {
                     Some(index) => {
                         self.lan_pools[index] = pool;
                     }
-                    None => {},
+                    None => {}
                 }
-                self.item.set_str("lan_pool",
-                    &serde_json::to_string(&self.lan_pools).unwrap());
+                self.item
+                    .set_str("lan_pool", &serde_json::to_string(&self.lan_pools).unwrap());
             }
             Msg::AddPool => {
                 let p = LanPool {

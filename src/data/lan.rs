@@ -1,7 +1,4 @@
-
-
-
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Properties)]

@@ -16,19 +16,15 @@ use crate::components::baloon::BaloonView;
 use isabelle_dm::transfer_model::detailed_login_user::DetailedLoginUser;
 
 use pages::{
-    config_edit_page::ConfigEditPage,
-    config_edit_dhcp_page::ConfigEditDhcpPage,
-    config_list_page::ConfigListPage,
-    device_edit_page::DeviceEditPage, device_manage_page::DeviceManagePage, device_list_page::DeviceListPage,
+    config_edit_dhcp_page::ConfigEditDhcpPage, config_edit_page::ConfigEditPage,
+    config_list_page::ConfigListPage, device_edit_page::DeviceEditPage,
     device_group_edit_page::DeviceGroupEditPage, device_group_list_page::DeviceGroupListPage,
-    home::Home,
+    device_list_page::DeviceListPage, device_manage_page::DeviceManagePage, home::Home,
     itm_edit_page::ItmEditPage, login::LoginPage, logout::LogoutPage,
-    module_edit_page::ModuleEditPage,
-    module_list_page::ModuleListPage,
-    page_not_found::PageNotFound,
-    privacy_policy::PrivacyPolicyPage,
-    setting_edit_page::SettingEditPage,
-    user_edit_page::UserEditPage, user_list_page::UserListPage, user_pwd_page::UserPwdPage,
+    module_edit_page::ModuleEditPage, module_list_page::ModuleListPage,
+    page_not_found::PageNotFound, privacy_policy::PrivacyPolicyPage,
+    setting_edit_page::SettingEditPage, user_edit_page::UserEditPage, user_list_page::UserListPage,
+    user_pwd_page::UserPwdPage,
 };
 
 #[derive(Routable, PartialEq, Clone, Debug)]
