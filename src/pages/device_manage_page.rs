@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::util::input::*;
+
 
 pub enum Msg {
     UpdateItemList(FetchState<HashMap<u64, Item>>),
@@ -306,7 +306,7 @@ impl DeviceManagePage {
                     </div>
                 </div>
             };
-        let groups_list = groups.into_iter().map(|el| {
+        let _groups_list = groups.into_iter().map(|el| {
             html! {
                 <option selected={ self.item.safe_id("group", u64::MAX) == el.0 } value={ el.1.id.to_string() }>{ el.1.safe_str("name", "") }</option>
             }
