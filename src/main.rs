@@ -7,7 +7,6 @@ use yew_router::prelude::*;
 mod common;
 mod components;
 mod data;
-mod hooks;
 mod pages;
 mod util;
 
