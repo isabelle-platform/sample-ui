@@ -1,4 +1,5 @@
 pub mod baloon;
+pub mod config_edit_dhcp_pool_view;
 pub mod config_view;
 pub mod device_view;
 pub mod device_group_view;

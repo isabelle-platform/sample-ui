@@ -1,28 +1,14 @@
 use serde::Deserialize;
-
 use crate::common::*;
 use isabelle_dm::data_model::item::Item;
-
 use crate::components::baloon::BaloonView;
-
+use crate::components::config_edit_dhcp_pool_view::ConfigEditDhcpPoolView;
 use crate::util::accessor::*;
-
 use std::collections::HashMap;
-
 use yew::prelude::*;
 use yew_router::prelude::*;
-
 use crate::util::input::*;
-
-pub enum Msg {
-    UpdateItemList(FetchState<HashMap<u64, Item>>),
-    UpdateStr(String, String),
-    UpdateBool(String, bool),
-    UpdateU64(String, u64),
-    SaveData,
-    SaveDataSucceeded,
-    SaveDataFailed,
-}
+use crate::data::lan::*;
 
 pub struct ConfigEditDhcpPage {
     queried_id: u64,
@@ -34,29 +20,16 @@ pub struct ConfigEditDhcpPage {
     lan_pools: Vec<LanPool>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
-pub struct LanPoolRegisteredMac {
-    mac: String,
-    ipv4: String,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
-pub struct LanPool {
-    enable: bool,
-    ipv4_start: String,
-    ipv4_end: String,
-    interface: String,
-    routers: Vec<String>,
-    client_subnet_mask: String,
-    lease_time: u64,
-
-    registered: Vec<LanPoolRegisteredMac>,
-
-    domain: String,
-
-    dns: Vec<String>,
-
-    broadcast: String,
+pub enum Msg {
+    UpdateItemList(FetchState<HashMap<u64, Item>>),
+    UpdateStr(String, String),
+    UpdateBool(String, bool),
+    UpdateU64(String, u64),
+    UpdateLanPool(LanPool),
+    SaveData,
+    SaveDataSucceeded,
+    SaveDataFailed,
+    AddPool,
 }
 
 impl Component for ConfigEditDhcpPage {
@@ -144,6 +117,35 @@ impl Component for ConfigEditDhcpPage {
                 self.in_progress = false;
                 self.failed = true;
             }
+            Msg::UpdateLanPool(pool) => {
+                match self.lan_pools
+                          .iter()
+                          .position(|x| x.id == pool.id) {
+                    Some(index) => {
+                        self.lan_pools[index] = pool;
+                    }
+                    None => {},
+                }
+                self.item.set_str("lan_pool",
+                    &serde_json::to_string(&self.lan_pools).unwrap());
+            }
+            Msg::AddPool => {
+                let p = LanPool {
+                    id: self.lan_pools.len() as u64,
+                    enable: false,
+                    ipv4_start: "".to_string(),
+                    ipv4_end: "".to_string(),
+                    interface: "".to_string(),
+                    routers: Vec::new(),
+                    client_subnet_mask: "".to_string(),
+                    lease_time: 0,
+                    registered: Vec::new(),
+                    domain: "".to_string(),
+                    dns: Vec::new(),
+                    broadcast: "".to_string(),
+                };
+                self.lan_pools.push(p);
+            }
         }
         true
     }
@@ -200,6 +202,17 @@ impl Component for ConfigEditDhcpPage {
 
 impl ConfigEditDhcpPage {
     fn add_form(&self, ctx: &Context<Self>) -> Html {
+        let list = self.lan_pools.clone().into_iter()
+            .map(|el| {
+            html! {
+                <ConfigEditDhcpPoolView pool={ el } on_change={ctx.link().callback(Msg::UpdateLanPool)}/>
+            }
+        });
+        let pools = html! {
+            <>
+                { for list }
+            </>
+        };
         let err_htm = if self.failed {
             html! {
                 <>
@@ -212,6 +225,7 @@ impl ConfigEditDhcpPage {
                 </>
             }
         };
+
         html! {
             <>
                 { err_htm }
@@ -229,6 +243,30 @@ impl ConfigEditDhcpPage {
                                 </label>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <hr/>
+
+                <h2>{ "Pools"}</h2>
+
+                { pools }
+
+                <br/>
+
+                <div class="field is-horizontal">
+                    <div class="field-label">
+                        <label class="label">{ "" }</label>
+                    </div>
+                    <div class="field-body">
+                        <button onclick={ctx.link().callback(|_| Msg::AddPool)} type="submit" class={"button is-danger"}>
+                            <span class="icon is-small">
+                                <i class="fas fa-floppy-disk"></i>
+                            </span>
+                            <span>
+                                { "Add pool" }
+                            </span>
+                        </button>
                     </div>
                 </div>
 
